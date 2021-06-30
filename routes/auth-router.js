@@ -37,9 +37,13 @@ authRouter.post('/login', (req, res) => {
       // the above will then give a true and false as to if it matches the encrypted password we have stored
       // now we know if the user exists and if they know the password
 
-      if(passwordCorrect) res.redirect('/')
-      else res.render("auth-views/login-form", { errorMessage: "Name or password incorrect" });
-    }
+      if(passwordCorrect){
+        req.session.currentUser = user;
+        res.redirect("/")
+      } else {
+        res.render("auth-views/login-form", { errorMessage: "Name OR pwd is incorrect" });
+      }
+      }
   })
 })
 

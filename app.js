@@ -13,6 +13,12 @@ const app = express();
 // require database configuration
 require('./configs/db.config');
 
+
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+
+
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
@@ -23,6 +29,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+
+
+
+//middlewear
+// Checks incoming request: if there is a cookie, and if cookie has valid session id
+
+app.use(
+  session({
+    secret: 'PizzaBytes',
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 7 days, 24 hours, 60 minutes, 60 seconds - this is saying after this amount of time (1 week), the session will kill itself and the user will be logged out
+      // ttl stands for time to leave - they log you out
+    },
+    store: MongoStore.create({
+      mongoUrl: 'mongodb://localhost/auth-demo'
+    })
+  })
+  ); // the session is important to know if a user is still logged in
+
+  // once you have the session you can access the session object from inside your routes
+  
 
 // ROUTES
 app.use("/auth", authRouter);
