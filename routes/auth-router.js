@@ -2,8 +2,8 @@ const express = require("express");
 const authRouter = express.Router();
 const User = require("../models/user-model");
 
-const bcrypt = require("bcrypt");
-const saltRounds = 5;
+const bcrypt = require("bcryptjs");
+const saltRounds = process.env.SALT || 10;
 
 const zxcvbn = require("zxcvbn");
 
@@ -13,6 +13,35 @@ authRouter.get("/login", (req, res) => {
   console.log("Inside login")
   res.render("auth-views/login-form");
 });
+
+
+authRouter.post('/login', (req, res) => {
+  const {username, password} = req.body
+
+  // 1. Check if the username and password are provided
+  if (username === "" || password === "") {
+    res.render("auth-views/login-form", { errorMessage: "Username and Password are required." });
+    return; // stops the execution of the function further
+    }
+
+  User.findOne({username}) //username is an object that the database uses to filter results (same as {username: username})
+  .then(user => {
+    // if user not found, show error message below
+    if (!user) {
+      res.render("auth-views/login-form", { errorMessage: "Input invalid" });
+    } else {
+      // If user exists ->  Check if the password is correct
+      const encryptedPassword = user.password;
+      // to encrypt the password and compare it use:
+      const passwordCorrect = bcrypt.compareSync(password, encryptedPassword);
+      // the above will then give a true and false as to if it matches the encrypted password we have stored
+      // now we know if the user exists and if they know the password
+
+      if(passwordCorrect) res.redirect('/')
+      else res.render("auth-views/login-form", { errorMessage: "Name or password incorrect" });
+    }
+  })
+})
 
 
 // GET    '/auth/signup'     -  Renders the signup form
